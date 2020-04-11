@@ -28,7 +28,7 @@ public static void main(String[] args){
 
 ## 6.锁与mvvc
 
-![](C:\Users\Administrator\Desktop\regexp.jpg)
+![synchronized原理](https://raw.githubusercontent.com/PheonixHkbxoic/PhDocs/master/imgs/synchronized%E5%8E%9F%E7%90%86.png?token=AD35JJNRHDXMQEH4T5C4YMK6SF2HU)
 
 # 二、Innodb与MyIsam引擎等
 
