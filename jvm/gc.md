@@ -48,7 +48,7 @@
 
 通过OopMap垃圾收集器就可以更快的找到GC Roots，并且更快的完成GC Roots的枚举，大概展示如下图：
 
-![img](https://raw.githubusercontent.com/PheonixHkbxoic/PhDocs/master/imgs/8c1001e93901213fe87d8468e37c41d72e2e955e.jpeg?token=AD35JJMH3D7BSXFG2OKZH5C6TFWLG)
+![img](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/gc_oopmap.jpeg)
 
 
 
@@ -98,8 +98,4 @@ Java 虚拟机中的 Stop-the-world 是通过安全点（safepoint）机制来�
 
 优点：能够解决内存碎片化的问题缺点：堆空间的使用效率极其低下（毕竟分成两半，一次只使用一半）
 
-
-
-
-
-![gc](https://raw.githubusercontent.com/PheonixHkbxoic/PhDocs/master/imgs/gc.png?token=AD35JJKZWZ3CIYCDI4SNTVS6TFX3W)
+![](D:\typora\PhDocs\imgs\gc.png)
