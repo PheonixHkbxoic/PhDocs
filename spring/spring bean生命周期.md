@@ -8,9 +8,9 @@ Spring作为当前Java最流行、最强大的轻量级框架，受到了程序�
 
 　　Spring Bean的完整生命周期从创建Spring容器开始，直到最终Spring容器销毁Bean，这其中包含了一系列关键点。
 
-![img](https://images0.cnblogs.com/i/580631/201405/181453414212066.png)
+![img](C:\Users\Administrator\Desktop\imgs\spring\bean-lifecycle.png)
 
-![img](https://images0.cnblogs.com/i/580631/201405/181454040628981.png)
+![img](C:\Users\Administrator\Desktop\imgs\spring\bean-lifecycle2.png)
 
 　
 

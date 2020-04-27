@@ -52,12 +52,12 @@ AQS是一个抽象类，主要是通过继承的方式来使用，它本身没�
 ### ReentrantLock的类图
 
 仍然以ReentrantLock为例，来分析AQS在重入锁中的使用。毕竟单纯分析AQS没有太多的含义。先理解这个类图，可以方便我们理解AQS的原理
-![ReentrantLock的类图](https://segmentfault.com/img/remote/1460000017372070?w=804&h=449)
+![ReentrantLock的类图](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/reentrantlock-inherit-map.png)
 
 ### AQS的内部实现
 
 AQS的实现依赖内部的同步队列,也就是FIFO的双向队列，如果当前线程竞争锁失败，那么AQS会把当前线程以及等待状态信息构造成一个Node加入到同步队列中，同时再阻塞该线程。当获取锁的线程释放锁以后，会从队列中唤醒一个阻塞的节点(线程)。
-![AQS同步队列](https://segmentfault.com/img/remote/1460000017372071?w=439&h=204)
+![AQS同步队列](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/aqs-clh.png)
 
 >   AQS队列内部维护的是一个FIFO的双向链表，这种结构的特点是每个数据结构都有两个指针，分别指向直接的后继节点和直接前驱节点。所以双向链表可以从任意一个节点开始很方便的访问前驱和后继。每个Node其实是由线程封装，当线程争抢锁失败后会封装成Node加入到ASQ队列中去
 
@@ -109,7 +109,7 @@ static final class Node {
 #### 添加节点
 
 当出现锁竞争以及释放锁的时候，AQS同步队列中的节点会发生变化，首先看一下添加节点的场景。
-![节点添加到同步队列](https://segmentfault.com/img/remote/1460000017372072?w=648&h=228)
+![节点添加到同步队列](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/aqs-clh-addnode.png)
 这里会涉及到两个变化
 
 -   新的线程封装成Node节点追加到同步队列中，设置prev节点以及修改当前节点的前置节点的next节点指向自己
@@ -118,7 +118,7 @@ static final class Node {
 #### 释放锁移除节点
 
 head节点表示获取锁成功的节点，当头结点在释放同步状态时，会唤醒后继节点，如果后继节点获得锁成功，会把自己设置为头结点，节点的变化过程如下
-![移除节点的变化](https://segmentfault.com/img/remote/1460000017372073?w=624&h=208)
+![移除节点的变化](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/aqs-clh-removenode.png)
 这个过程也是涉及到两个变化
 
 -   修改head节点指向下一个获得锁的节点
@@ -133,7 +133,7 @@ head节点表示获取锁成功的节点，当头结点在释放同步状态时�
 ### ReentrantLock的时序图
 
 调用ReentrantLock中的lock()方法，源码的调用过程我使用了时序图来展现
-![ReentrantLock中lock方法的时序图](https://segmentfault.com/img/remote/1460000017372074?w=915&h=409)
+![ReentrantLock中lock方法的时序图](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/aqs-lock-sequencechart.png)
 从图上可以看出来，当锁获取失败时，会调用addWaiter()方法将当前线程封装成Node节点加入到AQS队列，基于这个思路，我们来分析AQS的源码实现
 
 ### 分析源码

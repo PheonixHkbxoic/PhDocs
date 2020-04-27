@@ -12,7 +12,7 @@ Java中线程的状态分为6种。
 
 线程的状态图     
 
-![线程状态图](https://img-blog.csdnimg.cn/20181120173640764.jpeg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3BhbmdlMTk5MQ==,size_16,color_FFFFFF,t_70)
+![线程状态图](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/threadstate-detail.png)
 
 
 
@@ -49,7 +49,7 @@ Java中线程的状态分为6种。
 *   调用obj的wait(), notify()方法前，必须获得obj锁，也就是必须写在synchronized(obj) 代码段内。
 *   与等待队列相关的步骤和图
 
-![img](https://img-blog.csdn.net/20180701221233161?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3BhbmdlMTk5MQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+![img](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/object-waitqueue.png)
 
 >   线程1获取对象A的锁，正在使用对象A。
 >   线程1调用对象A的wait()方法。
@@ -92,7 +92,7 @@ Java中线程的状态分为6种。
 
 
 
-<img src="https://img9.doubanio.com/view/note/l/public/p65379194.webp" alt="img" style="zoom: 200%;" />
+<img src="https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/threadstate-detail2.png" alt="img" style="zoom: 200%;" />
 
 ## 链接
 

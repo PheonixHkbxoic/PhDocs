@@ -84,7 +84,7 @@ ConcurrentHashMap不能put null 是因为 无法分辨是key没找到的null还�
 
 6.具体put流程(jdk8)
 
-![HashMap的put流程（JDK8）](https://img-blog.csdn.net/20180508173741224?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3NodW1veWlu/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+![HashMap的put流程（JDK8）](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/hashmap-put-jdk8.png)
 
 1、hash(key)，取key的hashcode进行高位运算，返回hash值
 2、如果hash数组为空，直接resize()

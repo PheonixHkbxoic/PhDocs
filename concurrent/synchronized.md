@@ -28,7 +28,7 @@ markword, KlassPointer, [如果是数组这里还会有数据的长度信息,]�
 
 java对齐为8*N，静态属性不算在对象大小内
 
-![这里写图片描述](https://img-blog.csdn.net/20170419212953720?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvenF6X3pxeg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![这里写图片描述](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent\java-object-structure.png)
 
 查看类及对象占用大小：org.openjdk.jol:jol-core这个jar包来查看
 
@@ -51,13 +51,13 @@ Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 
 4.加锁的原理是在对象头的markword中添加锁标志位(64位JVM markword如下)
 
-![img](https://img-blog.csdn.net/20180322153316377)
+![img](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent\java-object-markword.png)
 
 4种锁状态，级别由低到高依次为：**无锁状态**、**偏向锁状态**、**轻量级锁状态**、**重量级锁状态**。这几个状态会随着竞争情况逐渐升级。
 
 注意：锁可以升级但不能降级。
 
-![img](https:////upload-images.jianshu.io/upload_images/16538952-895f015b76c2e604.png?imageMogr2/auto-orient/strip|imageView2/2/w/1024/format/webp)
+![img](https://gitee.com/HKbxOIC/imgs/raw/master/PhDocs/concurrent/synchronized-lock.png)
 
 锁状态说明及升级图示
 
