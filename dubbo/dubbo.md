@@ -181,7 +181,7 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
 >   轮循选取提供者策略，平均分布，但是存在请求累积的问题；
 > 3.LeastActive LoadBalance
 >   最少活跃调用策略，解决慢提供者接收更少的请求；
-> 4.ConstantHash LoadBalance
+> 4.ConsistantHash LoadBalance
 >   一致性Hash策略，使相同参数请求总是发到同一提供者，一台机器宕机，可以基于虚拟节点，分摊至其他提供者，避免引起提供者的剧烈变动；
 > 缺省时为Random随机调用
 
