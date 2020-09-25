@@ -1,0 +1,73 @@
+
+
+
+# os-first
+第一个操作系统  =>  显示 hello os world!
+
+## 先建立myos文件夹，以后将需要的资源都放在这里
+注意：以下所有命令都要以管理员身份运行
+
+## boot.asm
+```asm
+org 07c00h 				; 告诉编译器程序加载到 7c00处 
+section .text
+	global _start
+	
+_start:
+	mov ax, cs 
+	mov ds, ax 
+	mov es, ax                     
+	call DispStr 		; 调用显示字符串例程 
+	jmp $ 				; 无限循环 
+DispStr: 
+	mov ax, BootMessage 
+	mov bp, ax 			; es:bp = 串地址 
+	mov cx, msglen 			; cx = 串长度 
+	mov ax, 01301h 		; ah = 13, al = 01h 
+	mov bx, 000ch 		; 页号为 0(bh = 0) 黑底红字(bl = 0Ch,高亮) 
+	mov dx, 1100h		; dh行 dl列 17行0列
+	int 10h 			; 10h 号中断 
+	ret 
+BootMessage: 
+	msg db "Hello, OS world!",0dh,0ah	;回车、换行
+	msglen equ $-msg
+	times 510-($-$$) db 0 	; 填充剩下的空间，使生成的二进制代码恰好为 
+	dw 0xaa55 				; 结束标志
+```
+
+## boot.bin 编译操作系统引导程序
+nasm boot.asm -o boot.bin
+
+
+## bximage创建boot.img磁盘镜像(floppya)
+bximage -> fd
+endter
+boot.img
+
+## 将boot.bin写入磁盘boot.img中
+$ dd if=myos/boot.bin of=myos/boot.img bs=1440k
+0+1 records in
+0+1 records out
+512 bytes copied, 0.0036945 s, 139 kB/s
+
+
+## 配置文件bochsrc.bxrc
+```txt
+#how much memory the emulated machine will have
+megs:32
+
+#filename of ROM images
+romimage:file=$BXSHARE/BIOS-bochs-latest,address=Oxf0000
+vgaromimage:file=$BXSHARE/VGABIOS-elpin-2.40
+
+#what disk images will be used
+floppya: 1_44=$BXSHARE/myos/boot.img, status=inserted
+
+# This defines the boot sequence. Now you can specify up to 3 boot drives,
+# which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
+boot: floppy
+
+#where do we send log messages?
+log: $BXSHARE/myos/bochsout.txt
+```
+注意floppya的启动磁盘路径

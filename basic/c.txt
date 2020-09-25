@@ -1,0 +1,288 @@
+
+# C语言相关知识笔记
+
+## gcc
+gcc -o filename.exe  输出到文件filename.exe, o为小写字母o
+gcc -S filename.c 汇编到filename.s,可以用-o输出到指定的文件中
+需要注意的是生成的汇编是GAS(包含一些伪指令)，如：.seh_proc, .seh_pushreg
+可以参考：https://sourceware.org/legacy-ml/binutils/2009-08/msg00193.html
+gcc -S -fno-asynchronous-unwind-tables hello.c
+
+gcc -E filename.c [-o filename.i]只做预处理并将结果输出到标准输出(加上-o可以输出到指定的文件中) 
+gcc	-c filename.c 编译到filename.o,可以用-o输出到指定的文件中
+
+-O0 、-O1 、-O2 、-O3
+编译器的优化选项的 4 个级别，-O0 表示没有优化, -O1 为默认值，-O3 优化级别最高。
+
+-g　只是编译器，在编译的时候，产生调试信息。
+
+gcc main.c  预处理、编译、链接 并生成a.exe 可以用-o输出到指定的文件中
+
+执行./a.exe
+
+报错：
+1.undefined reference to `string_self`
+可能链接时缺失了相关目标文件（.o），或编译时文件顺序有误等
+gcc main.c CList.c CString.c
+
+多文件或项目时最好使用make或cmake
+
+
+## CMake 使用方法
+CMake的所有的语句都写在一个叫:CMakeLists.txt的文件中。
+当CMakeLists.txt文件确定后,可以用ccmake命令对相关 的变量值进行配置。
+这个命令必须指向CMakeLists.txt所在的目录。配置完成之后,应用cmake命令生成相应的makefile（在Unix like系统下）
+或者 project文件（指定用window下的相应编程工具编译时）。
+
+其基本操作流程为：
+
+$> ccmake directory
+$> cmake directory
+$> make
+  其中directory为CMakeList.txt所在目录；
+
+第一条语句用于配置编译选项，如VTK_DIR目录 ，一般这一步不需要配置，直接执行第二条语句即可，
+但当出现错误时，这里就需要认为配置了，这一步才真正派上用场；
+第二条命令用于根据CMakeLists.txt生成Makefile文件；
+第三条命令用于执行Makefile文件，编译程序，生成可执行文件；
+CMake的执行就是这么简单，其难点在于如何编写CMakeLists.txt文件
+
+如下：可以先创建一个文件夹 将所有cmake处理的文件放在其中
+mkdir custom_cmake_build_dir
+cd custom_cmake_build_dir
+cmake ../
+make
+
+$ cmake --help
+Usage
+
+  cmake [options] <path-to-source>
+  cmake [options] <path-to-existing-build>
+  cmake [options] -S <path-to-source> -B <path-to-build>
+
+Specify a source directory to (re-)generate a build system for it in the
+current working directory.  Specify an existing build directory to
+re-generate its build system.
+
+Options
+  -S <path-to-source>          = Explicitly specify a source directory.
+  -B <path-to-build>           = Explicitly specify a build directory.
+  -C <initial-cache>           = Pre-load a script to populate the cache.
+  -D <var>[:<type>]=<value>    = Create or update a cmake cache entry.
+  -U <globbing_expr>           = Remove matching entries from CMake cache.
+  -G <generator-name>          = Specify a build system generator.
+  -T <toolset-name>            = Specify toolset name if supported by
+                                 generator.
+	。。。。
+								 
+								 
+所以可以使用下面的命令 指定build目录
+cmake ./ -B custom_cmake_build_dir
+cd custom_cmake_build_dir & make								 
+
+如果报错：
+CMake Error: CMake was unable to find a build program corresponding to "Ninja".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
+1.请检查cygwin安装目录bin下有没有ninja.exe
+2.ninja.exe的路径有没有加入到path中
+3.ninja下载地址 https://github.com/ninja-build/ninja/releases
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+## main与return、exit
+最新的 C99 标准中，只有以下两种定义方式是正确的：
+
+　　int main( void )
+
+　　int main( int argc, char *argv[] )
+
+main 函数的返回值用于说明程序的退出状态。如果返回 0，则代表程序正常退出，否则代表程序异常退出。
+main 函数的返回值类型也必须是int。
+如果main函数的末尾没写return语句，C++98 规定编译器要自动在生成的目标文件中加入 return 0; 。
+同样，vc6 也不支持这个特性，但是 g++3.2（Linux 下的 C++ 编译器）支持。
+
+ 
+exit函数和return函数的主要区别是：
+
+    1）exit用于在程序运行的过程中随时结束程序，exit的参数是返回给OS的。
+		main函数结束时也会隐式地调用exit函数。
+		exit函数运行时首先会执行由atexit()函数登记的函数，然后会做一些自身的清理工作，
+		同时刷新所有输出流、关闭所有打开的流并且关闭通过标准I/O函数tmpfile()创建的临时文件。
+		exit是结束一个进程，它将删除进程使用的内存空间，同时把错误信息返回父进程,而return是返回函数值并退出函数。
+		通常情况：exit(0)表示程序正常, exit(1)和exit(-1)表示程序异常退出，exit(2)表示表示系统找不到指定的文件。
+		在整个程序中，只要调用exit就结束（当前进程或者在main时候为整个程序）。
+    2）return是语言级别的，它表示了调用堆栈的返回；return( )是当前函数返回，当然如果是在主函数main, 自然也就结束当前进程了，
+		如果不是，那就是退回上一层调用。在多个进程时。如果有时要检测上个进程是否正常退出。
+		就要用到上个进程的返回值，依次类推。而exit是系统调用级别的，它表示了一个进程的结束。
+    3）exit函数是退出应用程序，并将应用程序的一个状态返回给OS，这个状态标识了应用程序的一些运行信息。
+    4）和机器和操作系统有关的一般是： 0为正常退出，非0为非正常退出；
+	
+
+return表示中止当前函数的运行，并将操作权返回给调用者。
+如果是在main函数中，表示将操作权返回给操作系统。
+return不是必须要返回一个值。
+
+	
+
+
+## 长度为0的数组
+### 支持度
+在标准的C/C++中,长度为0的数组是不被允许的,它算是一个C/C++扩展,如果你的编译器支持这个扩展,你就可以使用它.
+
+VS系列编译器不完全支持这个扩展,如果你这样定义,多半会在编译时出现这样的警告:warning C4200: 使用了非标准扩展 : 结构/联合中的零大小数组,当 UDT 包含大小为零的数组时，无法生成复制构造函数或副本赋值运算符
+GUN编译器完全支持这个扩展,你可以合法的声明长度为0的数组,但这种声明的最典型的用法就是位于数组中的最后一项，为了方便内存缓冲区的管理
+
+### 特点
+```c
+struct Line{
+    uint32_t length;
+    char contents[0];
+};
+```
+1.指针本身需要占用内存,而长度为0的数组不需要,在上述例子中 sizeof(Line)=4
+2.长度为0的数组定义出的缓冲区可以和结构体处在同一片连续地址中,只要一次malloc操作和free操作.
+如果用指针,需要分别申请和释放结构体内存和指针指向的内存块,至少需要两次
+
+注意：长度为0的数组作为结构体属性时 应放在最后面(因为它不占内存，但后续你又要为其分配内存？)
+
+
+## 函数返回局部变量
+一般来说，函数是可以返回局部变量的。 
+局部变量的作用域只在函数内部，在函数返回后，局部变量的内存已经释放了。
+因此，如果函数返回的是局部变量的值，不涉及地址，程序不会出错。
+但是如果返回的是局部变量的地址(指针)的话，程序运行后会出错。
+因为函数只是把指针复制后返回了，但是指针指向的内容已经被释放了，这样指针指向的内容就是不可预料的内容，调用就会出错。
+准确来说，函数不能通过返回指向栈内存的指针(注意这里指的是栈，返回指向堆内存的指针是可以的)。
+
+总结如下：　
+　（1）返回指向字符串常量的指针
+　（2）不能返回以局部变量方式创建的字符串数组首地址
+　（3）在函数中，允许返回局部变量的值，不允许返回局部变量的地址
+　（4）在函数中，如果函数的返回值非要是一个局部变量的地址，那么该局部变量一定要申明为static类型。
+　（5）数组是不能作为函数的返回值
+　（6）返回指向堆内存的指针是可以的
+链接地址：https://www.cnblogs.com/iriczhao/p/11949910.html
+
+
+
+## 常用函数
+
+### strlen、sizeof、size_t
+size_t strlen(const char *str): 计算字符串的长度，直到空结束符('\0'),但不包括空结束符。
+所以字符数组，如果最后一个字符是'\0'时 才相当于字符串
+
+关于数组的长度可以用sizeof：如数组int a[10] = {0}, int len = sizeof(a)/sizeof(a[0]);
+char str[20] = "0123456789"; strlen(str)为10，sizeof(str)为20
+
+数组做sizeof的参数不退化，传递给strlen就退化为指针了
+sizeof后如果是类型必须加括弧，如果是变量名可以不加括弧。这是因为sizeof是个操作符不是个函数
+数组作为参数传给函数时传的是指针而不是数组，传递的是数组的首地址
+
+typedef unsigned int/long size_t;
+
+
+## strcat
+```c
+char *strcat(char *dest, const char *src);
+```
+1.strcat需要先找到dest的结尾，才能够继续追加. 如果申请的内存没有初始化，可能导致追加的字符串的位置不正确；可能导致了内存溢出（覆盖）
+2.dest为字符串数组或指针，并且要有足够的空间来容纳src，否则会溢出，可能导致Segmentation Fault
+	dest指针指向的内存区是可以写的(堆、栈、全局/静态变量),如果是只读的(比如常量区)，运行会出错
+3.src必须是字符串或以'\0'结尾的字符数组
+
+
+## strcmp
+int strcmp(const char *str1, const char *str2),  正数：str1大，0相等，负数：str1小
+
+
+
+
+
+
+
+## 声明、定义、初始化、赋值
+
+static int x；默认值为0。
+int x：默认值为不定值。
+
+
+
+### 数组
+int a[4];
+int a[4] = {0};
+int a[4] = {0,1,2};
+int a[] = {0,1,2};
+
+a[0] = 2;
+
+
+### 结构体
+#### 定义与声明
+struct Book{
+
+};
+
+struct Book book;
+
+struct Book{
+
+} book;
+
+struct {
+
+} book;
+
+typedef struct Book Book2;
+typedef struct Book{
+
+} Book2;
+typedef struct {
+
+} Book2;
+
+
+struct Book book;
+Book2 book;
+
+
+#### 初始化与赋值
+struct Book{
+	int a;
+	float b;
+} book = {1,3.502}, book2;
+
+book.a = 1;
+book.b = 3.502f;
+
+Book *ptrBook = &book;
+ptrBook->a = 1;
+ptrBook->b = 3.502;
+
+
+
+##  运算符优先级
+括号成员第一; 		//括号运算符[]() 成员运算符. ->
+全体单目第二; 		//所有的单目运算符比如+-(正负)、(类型)强制类型转换、 ++ --  指针运算* & ! ~ sizeof
+乘除余三,加减四; 	//这个"余"是指取余运算即%
+移位五，关系六; 	//移位运算符：<< >> ，关系：> < >= <= 等
+等于(与)不等排第七; //即== !=
+位与异或和位或; 	//这几个都是位运算: 位与(&)异或(^)位或(|)
+"三分天下"八九十;
+逻辑或跟与; 		//逻辑运算符:|| 和 &&
+十二和十一; 		//注意顺序:优先级(||) 底于 优先级(&&)
+条件高于赋值, 		//三目运算符优先级排到 13 位只比赋值运算符和","高//需要注意的是赋值运算符很多！
+逗号运算级最低! 	//逗号运算符优先级最低
+
+
+
+
+# CMakeLists.txt 语法介绍与实例演练
+[CMakeLists.txt 语法介绍与实例演练](https://blog.csdn.net/afei__/article/details/81201039)
+
+
+
+
+
+
+

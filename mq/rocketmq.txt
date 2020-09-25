@@ -1,0 +1,316 @@
+
+
+## broker
+一、Broker概述
+Broker是 RocketMQ 的核心，大部分‘重量级”工作都是由 Broker完成的。
+包括接收 Producer 发过来的消息、处理 Consumer 的消费消息请求、消息的持 久化存储、消息的 HA 机制以及服务端过滤功能等 。
+
+二、消息的存储与转发
+分布式队列因为有高可靠性的要求，所以数据要通过磁盘进行持久化存储 。
+磁盘顺序写速度可以达到 600MB/s，但是随机写的速度只有大概 lOOKB/s。
+RocketMQ 充分利用了这个特性，提高消息存盘和网络发送的速度 。
+
+三、消息存储结构
+1.RocketMQ消息的存储形式：ConsumeQueue + CommitLog
+
+CommitLog：
+消息真正的物理存储文件，每台 Broker上的 CommitLog被本机器所有 ConsumeQueue 共享。
+
+ConsumeQueue:
+消息的逻辑队列，类似数据库的索引文件，存储的是指向物理存储的地址。每个 Topic下的每个 Message Queue都有一个对应的 ConsumeQueue文件。
+
+在 CommitLog 中，一个消息的存储长度是不固定的，RocketMQ 采取一些机制，尽量向 CommitLog 中顺序写，但是随机读，每次读取消息队列先读取consumer Queue,然后再通过consumerQueue去commitLog中拿到消息主体。
+(ConsumeQueue 的内容也会被写到磁盘里作持久存储 )
+
+2.此存储结构下的优势
+
+CommitLog顺序写，大大提高写入效率
+虽然是随机读，但是利用操作系统的 pagecache 机制，可以批量地从磁盘读取作为 cache存到内存中，加速后续的读取速度。
+为了保证完全的顺序写，需要 ConsumeQueue 这个中间结构，在实际情况中，大部分的 ConsumeQueue 能够被全部读入内存，所以这个中间结构的操作速度很快，可以认为是内存读取的速度 。
+四、高可用机制
+RocketMQ 分布式集群是通过 Master 和 Slave 的配合达到高可用性的
+
+1.消费端的高可用：
+Master角色的 Broker支持读和写， Slave角色的 Broker仅支持读
+当 Master 不可用或者繁忙的时候， Consumer 会被自动切换到从 Slave 读 。
+当一个 Master 角色的机器出现故障后， Consumer 仍然可以从 Slave 读，不影响 Consumer 程序 。
+
+2.发送端的高可用：
+在创建 Topic 的时候，把 Topic 的多个 Message Queue创建在多个 Broker组上
+(相同 Broker名称，不同 brokerId 的 机器组成 一 个 Broker 组)，
+这样当一个Broker 组的 Master 不可用后，其他组的 Master 仍然可用， Producer 仍然可以发送消息 。
+
+五、同步刷盘和异步刷盘
+同步刷盘方式 :
+在返回写成功状态时，消息已经被写入磁盘 。 消息写入内存的 PAGECACHE 后，立刻通知刷盘线程刷盘，然后等待刷盘完成，刷盘线程执行完成后唤醒等待的线程，返回消息写成功的状态 。
+
+异步刷盘方式 :
+在返回写成功状态时 ，消息可能只是被写入了内存的 PAGECACHE，写操作的返回快，吞吐量大 ;
+当内存里的消息量积累到一定程度时，统一触发 写磁盘动作，快速写人 。
+
+注意：
+刷盘方式通过 Broker 配置文件里的 flushDiskType 参数进行设置：
+SYNC_FLUSH 同步刷盘
+ASYNC_FLUSH 异步刷盘
+
+六、同步复制和异步复制
+如果一个 Broker组有 Master和 Slave, 消息需要从 Master复制到 Slave上。
+
+同步复制方式：
+Master 和 Slave 均写成功 后才反馈给客户端写成功状态
+
+异步复制方式：
+只要 Master 写成功即可反馈给客户端写成功状态 。
+
+注意：
+1.复制方式是通过 Broker 配置文件里的 brokerRole 参数进行设置：
+ASYNC MASTER 异步复制
+SYNC MASTER 同步复制
+SLAVE 无影响
+
+2.通常情况下，应该把
+刷盘方式配置成 ASYNC_FLUSH
+主从复制方式配置成 SYNC_MASTER
+这样即使有一台机器出故障，仍然能保证数据不丢。
+
+摘自：https://blog.csdn.net/Cactus_Lrg/article/details/86706457
+
+
+
+## 消息及文件存储
+[root@iz2ze5wmcrzv8stlxq0387z store]# tree
+.
+├── abort
+├── checkpoint
+├── commitlog
+│   └── 00000000000000000000
+├── config
+│   ├── consumerFilter.json
+│   ├── consumerFilter.json.bak
+│   ├── consumerOffset.json
+│   ├── consumerOffset.json.bak
+│   ├── delayOffset.json
+│   ├── delayOffset.json.bak
+│   ├── subscriptionGroup.json
+│   ├── subscriptionGroup.json.bak
+│   ├── topics.json
+│   └── topics.json.bak
+├── consumequeue
+│   ├── customOrderTopicName
+│   │   └── 0
+│   │       └── 00000000000000000000
+│   ├── customTopicName
+│   │   ├── 0
+│   │   │   └── 00000000000000000000
+│   │   ├── 1
+│   │   │   └── 00000000000000000000
+│   │   └── 2
+│   │       └── 00000000000000000000
+│   ├── first-sight
+│   ├── OFFSET_MOVED_EVENT
+│   │   └── 0
+│   │       └── 00000000000000000000
+│   └── SCHEDULE_TOPIC_XXXX
+│       ├── 1
+│       │   └── 00000000000000000000
+│       └── 2
+│           └── 00000000000000000000
+├── index
+│   └── 20200902120136867
+└── lock
+
+可以看到所有数据全部存储在$HOME/store目录下
+config存储broker与topic的配置信息等
+
+### consumequeue
+consumequeue目录 每个Topic按名字作为一个文件夹
+ConsumeQueue是定长的结构，每1条记录固定的20个字节。
+	CommitLog Offset 		8 byte
+	Size					4 byte
+	Message Tag Hashcode	8 byte
+	
+很显然，Consumer消费消息的时候，要读2次：先读ConsumeQueue得到offset，再读CommitLog得到消息内容
+ConsumeQueue的作用
+1.通过broker保存的offset可以在ConsumeQueue中获取消息，从而快速的定位到commitLog的消息位置
+2.过滤tag是也是通过遍历ConsumeQueue来实现的（先比较hash(tag)符合条件的再到consumer比较tag原文）
+3.并且ConsumeQueue还能保存于操作系统的PageCache进行缓存提升检索性能
+
+### commitlog
+而所有的CommitLog数据全部存储在commitlog目录，每个文件大小为1G，不满则填充空白。
+每个文件名字长度为20，具体命名为文件偏移量，左边补0。
+
+### IndexFile
+$HOME \store\index\${fileName}，文件名fileName是以创建时的时间戳命名的，
+文件大小是固定的，等于40+500W*4+2000W*20= 420000040个字节大小。
+Index Header(40)+Slot Table(500w*4)+Index Linked List(2000w*20)
+
+消息id与commitLog的Offset 类似HashMap结构
+
+
+
+
+
+
+## 心跳报文
+### 开篇
+这篇文章的主要目的是分析RocketMq的集群中各个组件之间的定时心跳任务。
+producer/consumer 和 broker之间通过心跳报文来维持连接。
+broker 和 namesrv之间通过定时上报来维持连接。
+producer/consumer 和 namesrv之间通过定时拉取Topic路由信息来维持连接。
+
+
+### producer/consumer心跳包
+producer和consumer通过发送心跳包来维持broker的连接关系。
+
+以30s的时间间隔定时执行sendHeartbeatToAllBrokerWithLock方法来发送心跳包。
+sendHeartbeatToAllBroker负责执行发送心跳报文的任务。
+sendHeartbeatToAllBroker的核心逻辑组装心跳报文，针对producer的只向master节点发送心跳包，针对consumer的向master/slave发送心跳包。
+prepareHeartbeatData负责组装心跳包，针对producer和consumer生成心跳包。
+producer的心跳包内容只包含producerGroup信息即可。
+consumer的心跳包内容ConsumerData包含消费订阅信息。
+
+
+### broker#ClientManageProcessor.heartBeat
+ClientManageProcessor#heartBeat负责处理producer/consumer发送过来的心跳包。
+heartBeat方法内部会区分producer/consumer的心跳包来实现不同的逻辑。
+ConsumerManager负责处理保存consumer的相关信息
+ProducerManager负责保存producer的相关信息。
+
+### broker心跳包
+broker负责定时上报broker上的TopicConfig信息到namesrv当中。
+BrokerController
+Broker通过定时上报Topic的配置信息到namesrv当中。
+TopicConfigSerializeWrapper负责封装待上报的TopicConfig。
+doRegisterBrokerAll负责执行向namesrv上报的逻辑。
+
+上报哪些信息呢：
+1.clusterName Set<String/* brokerName */>
+2.brokerName BrokerData:{
+	private String cluster;
+    private String brokerName;
+	private HashMap<Long/* brokerId */, String/* broker address */> brokerAddrs; 
+}
+
+3.topic List<QueueData>>
+QueueData:{
+	private String brokerName;
+    private int readQueueNums;
+    private int writeQueueNums;
+    private int perm;
+    private int topicSynFlag;
+}
+
+4.brokerAddr BrokerLiveInfo:{
+    private long lastUpdateTimestamp;
+    private DataVersion dataVersion;
+    private Channel channel;
+    private String haServerAddr;
+}
+
+
+
+### namesrv#DefaultRequestProcessor
+namesrv的DefaultRequestProcessor负责处理broker上报的TopicConfig信息。
+RouteInfoManager#registerBroker负责保存Topic的配置信息。
+
+
+如何处理未存活的Broker?
+Broker未存活的判断
+Broker和Namesrv的Channel通道发生close、excepiton、idle事件，namesrv端将调用onChannelDestroy进行处理
+Namesrv将启动一个定时线程每隔10s扫描已上报的brokerLiveTable中所有Broker信息是否已超时上报，默认超时为120s，若超时，调用onChannelDestroy进行处理。
+BROKER_CHANNEL_EXPIRED_TIME = 1000 * 60 * 2;
+
+
+
+### producer/consumer定时拉取路由信息
+producer/consumer负责定时向namesrv同步路由信息。
+updateTopicRouteInfoFromNameServer
+updateTopicRouteInfoFromNameServer负责从namesrv同步路由信息。
+待同步的Topic信息来自consumer的订阅的topic或者producer发送消息的topic。
+getTopicRouteInfoFromNameServer负责向namsrv同步路由信息。
+
+
+consumer有两种消费模式：集群消费和广播消费。
+集群消费：多个consumer平均消费该topic下所有mq的消息，即某个消息在某个message queue中被一个consumer消费后，其他消费者就不会消费到它；
+广播消费：所有consumer可以消费到发到这个topic下的所有消息。
+consumer有两种获取消息的模式：推模式和拉模式，在RocketMQ中，从技术实现角度看，推模式也是在拉模式上做了一层封装(pull+callback)。
+
+
+
+作者：晴天哥_374
+链接：https://www.jianshu.com/p/868cef9dbc24
+来源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+
+
+## 负载均衡
+rocketmq是Client端负载均衡
+
+
+
+
+## 从RocketMQ看长轮询(Long Polling)
+
+### 消息模式
+消息队列一般在消费端都会提供push和pull两种模式，RocketMQ同样实现了这两种模式，分别提供了两个实现类：DefaultMQPushConsumer和DefaultMQPullConsumer；两种方式各有优势：
+push模式：推送模式，即服务端有数据之后立马推送消息给客户端，需要客户端和服务器建立长连接，实时性很高，对客户端来说也简单，接收处理消息即可；缺点就是服务端不知道客户端处理消息的能力，可能会导致数据积压，同时也增加了服务端的工作量，影响服务端的性能；
+pull模式：拉取模式，即客户端主动去服务端拉取数据，主动权在客户端，拉取数据，然后处理数据，再拉取数据，一直循环下去，具体拉取数据的时间间隔不好设定，太短可能会导致大量的连接拉取不到数据，太长导致数据接收不及时；
+RocketMQ使用了长轮询的方式，兼顾了push和pull两种模式的优点，下面首先对长轮询做简单介绍，进而分析RocketMQ内置的长轮询模式。
+
+### 长轮询
+长轮询通过客户端和服务端的配合，达到主动权在客户端，同时也能保证数据的实时性；长轮询本质上也是轮询，只不过对普通的轮询做了优化处理，服务端在没有数据的时候并不是马上返回数据，会hold住请求，等待服务端有数据，或者一直没有数据超时处理，然后一直循环下去；下面看一下如何简单实现一个长轮询；
+
+1.实现步骤
+1.1客户端轮询发送请求
+客户端应该存在一个一直循环的程序，不停的向服务端发送获取消息请求；
+
+1.2服务端处理数据
+服务器接收到客户端请求之后，首先查看是否有数据，如果有数据则直接返回，如果没有则保持连接，等待获取数据，服务端获取数据之后，会通知之前的请求连接来获取数据，然后返回给客户端；
+
+1.3客户端接收数据
+正常情况下，客户端会马上接收到服务端的数据，或者等待一段时间获取到数据；如果一直获取不到数据，会有超时处理；在获取数据或者超时处理之后会关闭连接，然后再次发起长轮询请求；
+
+
+摘自：https://segmentfault.com/a/1190000018411470
+
+
+
+
+
+
+## 事务
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 常见面试题及选型
+https://zhuanlan.zhihu.com/p/161661032
+
+https://zhuanlan.zhihu.com/p/163246737
+
+
+
+
+

@@ -1,0 +1,147 @@
+
+
+
+
+# NASM
+nasm -f elf64 -o hello.o hello.asm
+ld -o hello hello.o
+
+https://blog.csdn.net/jadeshu/article/details/89159196
+https://blog.csdn.net/hhdy_/article/details/108074406?utm_medium=distribute.wap_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.wap_blog_relevant_no_pic&depth_1-utm_source=distribute.wap_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.wap_blog_relevant_no_pic
+
+
+
+##  bochs
+
+
+
+
+## asm
+https://www.cnblogs.com/ht-beyond/p/3879188.html
+
+
+通用寄存器：
+EAX,EBX,ECX,EDX,  用于操作数据;
+AX,BX,CX,DX,寄存器的１６位版本；
+AH,BH,CH,DH,AL,BL,CL,DL寄存器的８位高位和低位字节；
+
+段寄存器：
+CS,SS,DS,ES,FS,GS,16位寄存器，存放着，内存地址的前半部分；存放着指向代码，栈和额外数据段的指针
+
+偏移寄存器：
+EBP,指向函数的本地环境的起始位置；　
+ESI,存放着使用内存块的操作中的源数据的偏移
+EDI,存放着使用内存块的操作中目的数据偏移；　
+ESP,指向栈顶的指针；
+
+特殊寄存器：EFLAGS标志寄存器．CPU用来跟踪逻辑结果和处理器的状态；
+EIP　指向要执行的下一条指令的地址
+
+
+
+语法格式：
+
+NASM语法　mov eax,51h;   AT&T语法：Movl $51h, %eax;
+NASM是前面是寄存器，后面是数据，AT&T是数据在前数据，后面是寄存器；
+AT&T在寄存器前面使用％符号，NASM不需要．
+AT&T数据前面使用$符号，NASM不需要．
+
+AT&T处理内存引用的方式与NASM不同
+
+
+示例：
+```asm
+section .text
+		global _start
+	_start:
+		mov eax, 4
+		mov ebx, 1
+		mov ecx, string
+		mov edx, length
+		int 80h
+		
+		;exit的系统调用
+		mov eax, 1
+		mov ebx, 0
+		int 80h
+		
+	section .data
+		string:	db 'hello world',0Ah
+		length: equ 13
+		
+	section .bss
+		var:resb 1
+```
+
+> 以下对代码做简单的说明：
+
+（1）NASM中的段（Section）
+	.text段中有可执行的代码，就是通常所说的代码区
+	.data是数据区，声明和存放已初始化的变量，此变量是全局变量（至少对整个文件是可见的），Dx进行这些变量的初始化。
+	.bss是声明未初始化的变量，RESx用于给这些变量预留空间。
+	String：string db "hello"和String2: db "H","e","l","l"."o"是等价的
+	TIMES：用于初始化array，每个元素为同一个值
+	Eg: var: times 100 db
+
+（2）在NASM中取地址中存储的值必须要使用'[ ]'表示取内容。
+
+```asm
+; hello.asm
+; by cn.pheker
+; just for learning asm or called nasm
+; linux x86_64
+
+section .data
+	msg db "hello, world!", 10	; 10换行符 0AH
+	msglen equ $-msg
+	
+section .text
+	global _start		; gcc main entry
+	
+_start:
+	mov rax, 1			; sys_write
+	mov rdi, 1
+	mov rsi, msg
+	mov rdx, msglen
+	syscall
+	
+	mov rax, 60			; sys_exit
+	mov rdi, 0
+	syscall
+	
+```
+
+在线nasm测试
+http://www.dooccn.com/nasm/
+
+
+int 80H/syscall
+https://www.dazhuanlan.com/2019/12/20/5dfc4c74e6b93/?__cf_chl_jschl_tk__=c6a0db507401f12709bdfff57db0ef48358ea915-1600855650-0-ATdOt0RTrBmVMyvCnXlvPPr7eA9uH1Oe3pNwQi9CfFNy2FXpQcu-FTN1LaX70gu35JBcGNjwMwed2UhpVYIolLGQZ-yda8lOtjfUdv2UYswFVZmF3_vf4Hmb-l2X8OmzYyEQEdgmjQggC5He4flOSjtQsCURUAbmfwUAxj2mYbsOqNmQ-mH9fq4Or6rNqWPz7Dkadj0yp_rrpxw3D-rbdDu3se4fPS9-tWxv2NTJyhqlUF7zZCYgo5Mv0agVJ-wzmnM5aNV-s7isbcm4nDHq-hb9vWr-regZAATLnFGT6IdYOLcjDfwK8In88CiCD_ZLhw
+
+0xax教程sample
+https://0xax.github.io/asm_1/
+
+
+
+
+
+
+
+
+## 各汇编编辑器
+MASM、NASM、AT&T(GAS)、YASM
+
+yasm继承自masm，扩展了支持语法和平台，支持Intel格式语法和GNU AS语法。
+http://yasm.tortall.net/
+http://www.tortall.net/projects/yasm/manual/manual.pdf
+
+AS: 
+as命令是二进制工具集GNU Binutils的一员，是GNU推出的一款汇编语言编译器集，用于将汇编代码编译为二进制代码，它支持多种不同类型的处理器。
+hello.s --> hello.o
+https://sourceware.org/binutils/docs/as/index.html
+
+
+### org
+https://blog.csdn.net/judyge/article/details/52298054
+https://blog.csdn.net/hzhandsome/article/details/8392910?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.channel_param
+

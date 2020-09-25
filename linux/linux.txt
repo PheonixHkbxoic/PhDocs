@@ -1,0 +1,165 @@
+
+
+# curl
+
+-H 'User-Agent: php/1.0'	--header指定请求头参数
+-A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36' 指定代理
+-b 'foo1=bar;foo2=bar2' 指定要发送的cookie 或 包含cookie的文件
+-c cookie.txt	保存cookie到指定的文件
+-e 'htttps://www.baidu.com' 指定Referer
+--data-urlencode 对请求数据进行编码
+
+-X POST 指定请求方法
+-d 'u=admin&pwd=123'	指定请求POST参数
+使用-d参数以后，HTTP 请求会自动加上标头Content-Type : application/x-www-form-urlencoded。
+并且会自动将请求转为 POST 方法，因此可以省略-X POST。
+-d '@data.txt' 指定POST参数所在的文件
+
+-G get请求
+
+## -F 或 --form
+-F 'file=@photo.png' 上传二进制文件
+上面命令会给 HTTP 请求加上标头Content-Type: multipart/form-data，然后将文件photo.png作为file字段上传。
+
+-F参数可以指定 MIME 类型。
+curl -F 'file=@photo.png;type=image/png' https://google.com/profile
+上面命令指定 MIME 类型为image/png，否则 curl 会把 MIME 类型设为application/octet-stream。
+
+-F参数也可以指定文件名。
+curl -F 'file=@photo.png;filename=me.png' https://google.com/profile
+上面命令中，原始文件名为photo.png，但是服务器接收到的文件名为me.png。
+
+
+## -oO
+-o参数将服务器的回应保存成文件，等同于wget命令。
+curl -o example.html https://www.example.com
+上面命令将www.example.com保存成example.html。
+
+-O参数将服务器回应保存成文件，并将 URL 的最后部分当作文件名。
+curl -O https://www.example.com/foo/bar.html
+上面命令将服务器回应保存成文件，文件名为bar.html。
+
+curl默认会输出的控制台，所以下载文件时一定要加上-o或-O参数
+-#  显示进度条
+
+
+Content-Type
+当使用POST方法提交数据时，对于提交的数据主要有如下四种形式：
+
+application/x-www-form-urlencoded：默认的形式，即key1=value1&key2=value2的形式；
+multipart/form-data：使用表单上传文件时使用这个形式；
+application/json：提交JSON格式的数据；
+text/xml：提交XML格式的数据。
+
+curl -d '{I Am A JSON FORM}' -H 'Content-Type: application/json' http://example.com
+
+
+
+
+## 磁盘使用及文件大小
+
+磁盘分区使用情况(人类可读方式显示)
+df -ah  
+
+查看文件与目录所占大小
+du -h /usr 
+	-a 只显示文件
+	-s 只显示目录
+	
+du -s * | sort -nr | head
+
+
+	
+find . -type f -size +100M
+
+
+## history
+history 10 显示最近10条命令， 不加数字则显示所有
+!99 	执行第99条命令
+!vim 	执行从最近以vim开头的命令
+!!		执行上一条命令
+
+/usr/local/www/tomcat_seller-8809/logs/catalina.out
+
+
+
+## group  user
+groupadd    注：添加用户组；
+groupdel    注：删除用户组；
+groupmod    注：修改用户组信息
+groups      注：显示用户所属的用户组
+
+useradd
+	-d登入目录> 　	修改用户登入时的目录。
+	-g<群组> 　		修改用户所属的群组。
+	-G<群组> 　		修改用户所属的附加群组。
+	-l<帐号名称> 　	修改用户帐号名称。
+	-r				建立系统帐户
+如：useradd -g root user1
+
+
+利用 chown 将指定文件的拥有者改为指定的用户或组，用户可以是用户名或者用户ID；组可以是组名或者组ID；
+文件是以空格分开的要改变权限的文件列表，支持通配符。 。
+使用权限 : root
+chrown -R user[:group] file	处理指定目录以及其子目录下的所有文件
+
+
+https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.0-linux-x86_64.tar.gz
+
+
+
+
+## htop
+
+常用命令，shift+m 按照内存大小排序
+shift+h 收缩线程
+q 退出
+
+下面是 F1~F10 的功能和对应的字母快捷键。
+Shortcut Key	Function Key	Description	中文说明
+h, ?	F1	Invoke htop Help	查看htop使用说明
+S	F2	Htop Setup Menu	htop 设定
+/	F3	Search for a Process	搜索进程
+\	F4	Incremental process filtering	增量进程过滤器
+t	F5	Tree View	显示树形结构
+<, >	F6	Sort by a column	选择排序方式
+[	F7	Nice - (change priority)	可减少nice值，这样就可以提高对应进程的优先级
+]	F8	Nice + (change priority)	可增加nice值，这样就可以降低对应进程的优先级
+k	F9	Kill a Process	可对进程传递信号
+q	F10	Quit htop	结束htop
+
+命令行选项（COMMAND-LINE OPTIONS）
+-C --no-color　　　　 　　 使用一个单色的配色方案
+-d --delay=DELAY　　　　 设置延迟更新时间，单位秒
+-h --help　　　　　　  　　 显示htop 命令帮助信息
+-u --user=USERNAME　　  只显示一个给定的用户的过程
+-p --pid=PID,PID…　　　    只显示给定的PIDs
+-s --sort-key COLUMN　    依此列来排序
+-v –version　　　　　　　   显示版本信息
+
+交互式命令（INTERACTIVE COMMANDS）
+上下键或PgUP, PgDn 选定想要的进程，左右键或Home, End 移动字段，当然也可以直接用鼠标选定进程；
+Space    标记/取消标记一个进程。命令可以作用于多个进程，例如 "kill"，将应用于所有已标记的进程
+U    取消标记所有进程
+s    选择某一进程，按s:用strace追踪进程的系统调用
+l    显示进程打开的文件: 如果安装了lsof，按此键可以显示进程所打开的文件
+I    倒转排序顺序，如果排序是正序的，则反转成倒序的，反之亦然
++, -    When in tree view mode, expand or collapse subtree. When a subtree is collapsed a "+" sign shows to the left of the process name.
+a (在有多处理器的机器上)    设置 CPU affinity: 标记一个进程允许使用哪些CPU
+u    显示特定用户进程
+M    按Memory 使用排序
+P    按CPU 使用排序
+T    按Time+ 使用排序
+F    跟踪进程: 如果排序顺序引起选定的进程在列表上到处移动，让选定条跟随该进程。这对监视一个进程非常有用：通过这种方式，你可以让一个进程在屏幕上一直可见。使用方向键会停止该功能。
+K    显示/隐藏内核线程
+H    显示/隐藏用户线程
+Ctrl-L    刷新
+Numbers    PID 查找: 输入PID，光标将移动到相应的进程上
+
+
+echo q | htop | aha --black --line-fix > htop.html
+top -b -n1 > top.txt
+
+
+
+
